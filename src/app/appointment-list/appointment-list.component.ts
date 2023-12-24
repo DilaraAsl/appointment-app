@@ -1,24 +1,35 @@
 import { Component } from '@angular/core';
 import { Appointment } from '../models/appointment';
 import { AppointmentService } from '../services/appointment.service'; // Adjust the path based on your directory structure
+import { Observable } from 'rxjs';
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'app-appointment-list',
   templateUrl: './appointment-list.component.html',
-  styleUrls: ['./appointment-list.component.css']
+  styleUrls: ['./appointment-list.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default // or ChangeDetectionStrategy.OnPush
 })
 export class AppointmentListComponent {
 
-    newAppointmentTitle: string= "";
-    newAppointmentDate:Date=new Date();
-    appointments: Appointment[]=[];
+  newAppointmentTitle: string = '';
+  newAppointmentDate: Date = new Date();
+  appointments: Appointment[] = [];
+  appointments$: Observable<Appointment[]> = this.appointmentService.appointments$; // Initialize here
       
    
     // inject appointment service 
-  constructor(private appointmentService: AppointmentService) {}
+    constructor(
+      private appointmentService: AppointmentService
+    ) {}
+    
+
 
   ngOnInit() {
     // Fetch initial appointments when the component initializes
-    this.fetchAppointments();
+    // this.fetchAppointments();
+      // Fetch initial appointments when the component initializes
+  
+  this.fetchAppointments();
   }
   public fetchAppointments() {
     console.log('Fetching appointments...');
@@ -34,22 +45,23 @@ export class AppointmentListComponent {
       }
     );
   }
-
   addAppointment() {
     if (this.newAppointmentTitle.trim().length && this.newAppointmentDate) {
-      let newAppointment: Appointment = {
+      const newAppointment: Appointment = {
         id: Date.now(),
         title: this.newAppointmentTitle,
-        date: this.newAppointmentDate
+        date: this.newAppointmentDate,
       };
   
       this.appointmentService.saveAppointment(newAppointment).subscribe(
         (savedAppointment: Appointment) => {
-          // Optionally, you can update the UI or perform other actions
           console.log('Appointment saved successfully:', savedAppointment);
   
-          // Clear the form or update the local data if needed
-          // this.appointments.push(savedAppointment);
+          // Optionally, update local state (if needed)
+          this.appointments.push(savedAppointment);
+  
+          // Fetch appointments again to update the list
+          this.fetchAppointments();
         },
         (error) => {
           console.error('Error saving appointment:', error);
@@ -58,28 +70,49 @@ export class AppointmentListComponent {
     }
   }
   
-   // addAppointment(){
-    //   if(this.newAppointmentTitle.trim().length&& this.newAppointmentDate){
-    //     let newAppointment: Appointment={
-    //       id:Date.now(),
-    //       title: this.newAppointmentTitle,
-    //       date: this.newAppointmentDate
-    //     }
-    //     // push adds the newAppointment to the appointments array
-    //     this.appointments.push(newAppointment)
-    //   }
-      
-    //   // alert(this.newAppointmentTitle+" "+this.newAppointmentDate)
-    //   // this.appointments
-    // }
-      // it is property since it is defined inside a class
-  // when it is defined inside a function/method it is a variable
-
-  // Apointment interface is implemented by appointment object no need for a concrete class 
-  // appointment: Appointment ={
-  //   id: 1,
-  //   title: "Take dog for a walk",
-  //   date: new Date('2023-12-22')
+  // addAppointment() {
+  //   if (this.newAppointmentTitle.trim().length && this.newAppointmentDate) {
+  //     const newAppointment: Appointment = {
+  //       id: Date.now(),
+  //       title: this.newAppointmentTitle,
+  //       date: this.newAppointmentDate
+  //     };
+  
+  //     this.appointmentService.saveAppointment(newAppointment).subscribe(
+  //       (savedAppointment: Appointment) => {
+  //         console.log('Appointment saved successfully:', savedAppointment);
+          
+  //         // Update local state
+  //         this.appointments.push(savedAppointment);
+  
+  //         // Update observable by creating a new observable with the updated data
+  //         this.appointments$ = this.appointmentService.appointments$;
+  //       },
+  //       (error) => {
+  //         console.error('Error saving appointment:', error);
+  //       }
+  //     );
+  //   }
   // }
+  
+  // Important!!! using single quotes (') around the log messages, which causes the ${id} part not to be interpolated. 
+  // In JavaScript and TypeScript, string interpolation is done with backticks (``) instead of single or double quotes.
+  onDeleteAppointment(id: number): void {
+    this.appointmentService.deleteAppointment(id).subscribe(
+      (response) => {
+      // const message=response['message'] is a map
+        console.log(response['message']);  // Access the message property in the response
+        // Add any additional logic you need for a successful delete
+        window.alert(response['message']);
+            // Update local state if needed
+    this.appointments = this.appointments.filter(appointment => appointment.id !== id);
+
+      },
+      (error) => {
+        console.error(`Error deleting appointment with ID ${id}`, error);
+        // Handle error as needed
+      }
+    );
+  }
      
 }
