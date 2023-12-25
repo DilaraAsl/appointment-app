@@ -3,13 +3,14 @@ import { Appointment } from '../models/appointment';
 import { AppointmentService } from '../services/appointment.service'; // Adjust the path based on your directory structure
 import { Observable } from 'rxjs';
 import { ChangeDetectionStrategy } from '@angular/core';
+import {OnInit} from '@angular/core';
 @Component({
   selector: 'app-appointment-list',
   templateUrl: './appointment-list.component.html',
   styleUrls: ['./appointment-list.component.css'],
   changeDetection: ChangeDetectionStrategy.Default // or ChangeDetectionStrategy.OnPush
 })
-export class AppointmentListComponent {
+export class AppointmentListComponent implements OnInit {
 
   newAppointmentTitle: string = '';
   newAppointmentDate: Date = new Date();
